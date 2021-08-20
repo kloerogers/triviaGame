@@ -1,0 +1,41 @@
+// Mixin
+@mixin centerAlign {
+  margin: auto;
+  width: 50%;
+}
+
+body {
+  position: relative;
+}
+
+section {
+  transform: translate(-50%, -50%);
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-right: -50%;
+  border: 3px solid blue;
+  padding: 10vh;
+  align-content: center;
+}
+p {
+  padding: 5px;
+}
+input,
+select {
+  display: block;
+  margin: 5px;
+  padding: 5px;
+  width: 100%;
+}
+input[type='submit'] {
+  background: #f497da;
+  border-radius: 5px;
+  border-width: 2px;
+  height: 45px;
+}
+label {
+  font-size: 20px;
+  padding: 0 5px;
+}
