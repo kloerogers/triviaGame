@@ -1,77 +1,52 @@
-window.addEventListener('load', (e) => {
-  this.game = Game.getInstance();
-});
+// DOM Elements
+const playerOneInput = document.querySelector('#pOneName');
+const playerTwoInput = document.querySelector('#pTwoName');
+const difficultySelector = document.querySelector('#difficultySelect');
+const categorySelector = document.querySelector('#categorySelect');
+const startGameButton = document.querySelector('#startGameBtn');
 
-//  Ensures only one instance of the game exists
-class Game {
-  constructor() {
-    this.controller = new Controller();
-  }
-  static getInstance(_instance) {
-    if (!Game._instance) {
-      Game._instance = new Game();
-      console.log(Game._instance);
-    } else {
-      throw "Can't create a new game!";
-    }
-  }
-}
+// Variables
+const BASE_API_STRING = 'https://opentdb.com/api.php?amount=50';
+const PLAYER_ONE_NAME = 'Player 1';
+const PLAYER_TWO_NAME = 'Player 2';
 
-class Controller {
-  constructor() {
-    this.playerTurn = 0;
-    this.model = new Model();
+let forErrorArray = [];
+let baseGameData = {};
+let gameQuestions = {};
 
-    document.querySelector('#startGameBtn').addEventListener('click', this.formSubmit.bind(this));
-  }
-
-  // Setting up all the information for the game
-  formSubmit(e) {
-    e.preventDefault();
-    let errorArray = [];
-    const pOneNameValue = document.querySelector('#pOneName').value
-      ? document.querySelector('#pOneName').value
-      : errorArray.push('pOne');
-    const pTwoNameValue = document.querySelector('#pTwoName').value
-      ? document.querySelector('#pTwoName').value
-      : errorArray.push('pTwo');
-    const selectedCategory =
-      document.querySelector('#categorySelect').value === 'any'
-        ? ''
-        : document.querySelector('#categorySelect').value;
-    const selectedDifficulty =
-      document.querySelector('#difficultySelect').value === 'any'
-        ? ''
-        : document.querySelector('#difficultySelect').value;
-
-    if (errorArray.length === 0) {
-      this.gameData = {
-        playerOne: pOneNameValue,
-        playerTwo: pTwoNameValue,
-        category: selectedCategory,
-        difficulty: selectedDifficulty
-      };
-      this.model.apiCall({ selectedCategory, selectedDifficulty });
-
-      let event = new Event('formSubmitted');
-      event.info = {
-        data: this.gameData,
-        turn: this.playerTurn
-      };
-      document.dispatchEvent(event);
-    }
+// Functions
+function textInputValidation(inputValue, playerDefaultValue) {
+  if (inputValue) {
+    return inputValue;
+  } else {
+    forErrorArray.push(playerDefaultValue);
+    return playerDefaultValue;
   }
 }
+async function setGameData() {
+  let playerOneNameValidated = textInputValidation(playerOneInput.value, PLAYER_ONE_NAME);
+  let playerTwoNameValidated = textInputValidation(playerTwoInput.value, PLAYER_TWO_NAME);
+  let categoryNameValidated = categorySelector.value === 'any' ? '' : `&category=${categorySelector.value}`;
+  let difficultyNameValidated =
+    difficultySelector.value === 'any' ? '' : `&difficulty=${difficultySelector.value}`;
+  const fullAPIString = `${BASE_API_STRING}${categoryNameValidated}${difficultyNameValidated}`;
 
-// Used for any data processing
-class Model {
-  constructor() {}
-  apiCall(data) {
-    const { selectedCategory, selectedDifficulty } = data;
-    const category = selectedCategory ? `&category=${selectedCategory}` : '';
-    const difficulty = selectedDifficulty ? `&difficulty=${selectedDifficulty}` : '';
-    const apiString = `https://opentdb.com/api.php?amount=50${category}${difficulty}`;
+  gameQuestions = await fetch(fullAPIString, { method: 'GET' }).then((response) =>
+    response.json().then((responseAsJSON) => {
+      let { results } = responseAsJSON;
+      results.forEach((question) => {
+        question.answer_array = shuffleAnswers([...question.incorrect_answers, question.correct_answer]);
+      });
+      return results;
+    })
+  );
 
-    console.log(apiString);
-  }
+  baseGameData = {
+    playerOne: playerOneNameValidated,
+    playerTwo: playerTwoNameValidated,
+    questions: gameQuestions
+  };
 }
+
+// Event listener
+startGameButton.addEventListener('click', setGameData);
