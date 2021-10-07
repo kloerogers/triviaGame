@@ -10,16 +10,11 @@ const BASE_API_STRING = 'https://opentdb.com/api.php?amount=50';
 const PLAYER_ONE_NAME = 'Player 1';
 const PLAYER_TWO_NAME = 'Player 2';
 
-let forErrorArray = [];
-let baseGameData = {};
-let gameQuestions = {};
-
 // Functions
 function textInputValidation(inputValue, playerDefaultValue) {
   if (inputValue) {
     return inputValue;
   } else {
-    forErrorArray.push(playerDefaultValue);
     return playerDefaultValue;
   }
 }
@@ -31,7 +26,7 @@ async function setGameData() {
     difficultySelector.value === 'any' ? '' : `&difficulty=${difficultySelector.value}`;
   const fullAPIString = `${BASE_API_STRING}${categoryNameValidated}${difficultyNameValidated}`;
 
-  gameQuestions = await fetch(fullAPIString, { method: 'GET' }).then((response) =>
+  let gameQuestions = await fetch(fullAPIString, { method: 'GET' }).then((response) =>
     response.json().then((responseAsJSON) => {
       let { results } = responseAsJSON;
       results.forEach((question) => {
@@ -41,11 +36,26 @@ async function setGameData() {
     })
   );
 
-  baseGameData = {
-    playerOne: playerOneNameValidated,
-    playerTwo: playerTwoNameValidated,
+  let baseGameData = {
+    playerOne: {
+      name: playerOneNameValidated,
+      points: 0
+    },
+    playerTwo: {
+      name: playerTwoNameValidated,
+      points: 0
+    },
     questions: gameQuestions
   };
+  // Save the starting game data
+  localStorage.setItem('gameData', JSON.stringify(baseGameData));
+
+  if (localStorage.getItem('gameData')) {
+    showQuestion();
+  }
+}
+function showQuestion() {
+  document.querySelector('#gameSetup').remove();
 }
 
 // Event listener
