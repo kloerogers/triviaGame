@@ -45,7 +45,9 @@ async function setGameData() {
       name: playerTwoNameValidated,
       points: 0
     },
-    questions: gameQuestions
+    questions: gameQuestions,
+    playerTurn: 0,
+    turnsElapsed: 10
   };
   // Save the starting game data
   localStorage.setItem('gameData', JSON.stringify(baseGameData));
@@ -56,6 +58,34 @@ async function setGameData() {
 }
 function showQuestion() {
   document.querySelector('#gameSetup').remove();
+  let { playerOne, playerTwo, questions, playerTurn, turnsElapsed } = JSON.parse(localStorage.gameData);
+
+  console.log(createAnswerHTML(questions, turnsElapsed));
+
+  while (playerOne.points !== 10 || playerTwo.points !== 10) {
+    break;
+  }
+}
+
+function createAnswerHTML(questions, turn) {
+  htmlString = `
+    <section id="questionSection">
+      <div>
+        <h1>Question ${turn + 1}</h1>
+        <progress max="10" value="10"></progress>
+      </div>
+      <h2>${questions[turn].question}</h2>
+  `;
+  questions[turn].answer_array.forEach((answer, i) => {
+    htmlString += `
+      <div>
+        <input type="radio" name="answerSelect" id="answer${i}" />
+          <label for="answer${i}">${answer}</label>
+      </div>
+    `;
+  });
+  htmlString += '</section>';
+  return htmlString;
 }
 
 // Event listener
